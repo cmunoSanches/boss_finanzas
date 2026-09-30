@@ -1,0 +1,178 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Plata Clara · Finanzas en pareja</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#12213A"><link rel="apple-touch-icon" href="icon-192.png"><meta name="description" content="Control de gastos y presupuesto en pareja">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#F3F5F8;--card:#fff;--ink:#12213A;--mut:#64748B;--line:#E1E7EF;--p:#0E7C86;--h:#E8871E;--n:#C2415D;--o:#7A889C;--ok:#15803D;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1626;--card:#16223A;--ink:#EAF0F8;--mut:#93A3BA;--line:#26344F;--p:#2CB5C0;--h:#F5A040;--n:#EE6A88;--o:#9AA8BC;--ok:#4ADE80}}
+:root[data-theme="dark"]{--bg:#0E1626;--card:#16223A;--ink:#EAF0F8;--mut:#93A3BA;--line:#26344F;--p:#2CB5C0;--h:#F5A040;--n:#EE6A88;--o:#9AA8BC;--ok:#4ADE80}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Manrope,system-ui,sans-serif}
+.w{max-width:1080px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+h1{font-size:22px;font-weight:800;margin:0;letter-spacing:-.02em}h2{font-size:16px;margin:0 0 10px;font-weight:800}
+.sub{color:var(--mut);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.g{display:grid;gap:12px}.k4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.k2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.big{font-size:26px;font-weight:800;letter-spacing:-.02em}
+input,select,button{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 10px;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--p);outline-offset:1px}
+button{cursor:pointer;font-weight:600}.pri{background:var(--p);color:#fff;border-color:var(--p)}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;align-items:end}
+label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:3px}
+nav{display:flex;gap:6px;margin:14px 0;overflow-x:auto}nav button{border-radius:99px;background:var(--card)}nav button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.bar{height:9px;background:var(--line);border-radius:9px;overflow:hidden;margin:6px 0 2px}.bar i{display:block;height:100%;border-radius:9px}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;color:#fff}
+.al{border-left:4px solid var(--h);padding:8px 12px;background:var(--bg);border-radius:8px;margin-bottom:8px;font-size:14px}.al.bad{border-color:var(--n)}.al.ok{border-color:var(--ok)}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}td.r,th.r{text-align:right}
+.cv{position:relative;height:260px}.del{padding:2px 8px;color:var(--n)}
+.emp{text-align:center;padding:24px;color:var(--mut)}
+@media print{.np{display:none!important}body{background:#fff}.card{break-inside:avoid}}
+</style></head><body><div class="w">
+<header><div><h1>Plata Clara</h1><div class="sub">Sueldo en orden, sin gastos hormiga escondidos</div></div>
+<div class="np" style="display:flex;gap:10px;align-items:center"><button id="ib" style="display:none" onclick="dp.prompt()">Instalar app</button><span class="sub" id="st"></span><input type="month" id="mon" onchange="mon=this.value;R()" aria-label="Mes"></div></header>
+<div class="card np" id="fc"><h2>Registrar gasto</h2><div class="form">
+<label>Monto (CLP)<input id="fa" type="number" min="0" inputmode="numeric" placeholder="3500"></label>
+<label>Descripción<input id="fd" placeholder="Café, arriendo, Uber…"></label>
+<label>Tipo<select id="ft"></select></label>
+<label>Quién<select id="fw"></select></label>
+<label>Fecha<input id="fx" type="date"></label>
+<button class="pri" onclick="add()">Agregar gasto</button></div>
+<div class="sub" style="margin-top:8px">Cada tipo suma a un grupo del presupuesto: Principal, Hormiga, No necesario u Otros. Hormiga son los pequeños gastos diarios (café, snacks, delivery). "Ambos" es un gasto compartido.</div></div>
+<nav class="np" id="nav"></nav>
+<main id="v"></main>
+</div>
+<script>
+const T={p:{n:'Principal',c:'--p'},h:{n:'Hormiga',c:'--h'},n:{n:'No necesario',c:'--n'},o:{n:'Otros',c:'--o'}};
+const TY={p:{n:'Principal',g:'p',c:'#0E7C86'},c:{n:'Comidas',g:'p',c:'#2F9E6B'},t:{n:'Pasajes',g:'p',c:'#3B82C4'},m:{n:'Salud',g:'p',c:'#7C5CBF'},h:{n:'Hormiga',g:'h',c:'#E8871E'},b:{n:'Hobbies',g:'n',c:'#D6659B'},s:{n:'Suscripciones',g:'n',c:'#5B7DB1'},n:{n:'No necesario',g:'n',c:'#C2415D'},o:{n:'Otros',g:'o',c:'#7A889C'}};
+// >>> Para compartir entre los dos sin configurar nada, pega aquí tu URL de Firebase y un código familiar antes de subir a GitHub.
+const FIREBASE_URL='https://finanzas-15148-default-rtdb.firebaseio.com',API_KEY='AIzaSyBzItfyBcZnzJtiRu8JRkIPpKaIy-OLNFM';
+const K='plataclara_v1',KC='plataclara_cfg';
+let S={names:['Yo','Esposa'],im:{},del:[],ts:0,keep:0,lb:'',pct:{p:50,h:8,n:12,o:10,a:20},ex:[]};
+try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+let CFG={url:FIREBASE_URL,code:API_KEY};let LS=true;try{localStorage.setItem('t','1');localStorage.removeItem('t')}catch(e){LS=false}
+try{const c=JSON.parse(localStorage.getItem(KC));if(c&&c.url)CFG=c}catch(e){}
+const loc=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+let tm;const save=()=>{loc();clearTimeout(tm);tm=setTimeout(sync,700)};
+const stat=t=>{const x=document.getElementById('st');if(x)x.textContent=t};
+const KR='pc_rt';let TK=null;
+const sess=()=>{try{return localStorage.getItem(KR)}catch(e){return null}};
+async function tok(){if(TK&&TK.exp>Date.now()+60000)return TK.id;const rt=sess();if(!rt)throw'login';
+const r=await(await fetch('https://securetoken.googleapis.com/v1/token?key='+CFG.code,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+rt})).json();
+if(r.error){try{localStorage.removeItem(KR)}catch(e){}throw'login'}
+TK={id:r.id_token,exp:Date.now()+r.expires_in*1000};try{localStorage.setItem(KR,r.refresh_token)}catch(e){}return TK.id}
+async function login(){try{const r=await(await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+CFG.code,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:$('#le').value.trim(),password:$('#lp').value,returnSecureToken:true})})).json();
+if(r.error){alert('Correo o contraseña incorrectos.');return}
+try{localStorage.setItem(KR,r.refreshToken)}catch(e){}TK={id:r.idToken,exp:Date.now()+r.expiresIn*1000};R();sync()}catch(e){alert('Sin conexión. Intenta de nuevo.')}}
+function logout(){try{localStorage.removeItem(KR)}catch(e){}TK=null;R()}
+function vLogin(){$('#v').innerHTML='<div class="card" style="max-width:420px;margin:20px auto"><h2>Iniciar sesión</h2><p class="sub">Acceso privado solo para ustedes dos.</p><div class="form" style="grid-template-columns:1fr"><label>Correo<input id="le" type="email" autocomplete="username"></label><label>Contraseña<input id="lp" type="password" autocomplete="current-password" onkeydown="if(event.key===\'Enter\')login()"></label><button class="pri" onclick="login()">Entrar</button></div></div>'}
+async function sync(){if(!CFG.url||!CFG.code){stat(LS?'Guardado en este dispositivo':'⚠ Este navegador no permite guardar aquí');return}
+stat('Sincronizando…');try{const t=await tok(),b=JSON.stringify(S.ex)+S.ts+JSON.stringify(S.im),u=CFG.url.replace(/\/$/,'')+'/hogar.json?auth='+t;const r=await(await fetch(u)).json();
+if(r&&r.error){stat('Sin permiso: usa un correo autorizado');return}
+if(r){const m=new Map(),dz=new Set([...(r.del||[]),...(S.del||[])]);[...(r.ex||[]),...S.ex].forEach(e=>m.set(e.id,e));S.del=[...dz];S.ex=[...m.values()].filter(e=>!dz.has(e.id));if((r.ts||0)>(S.ts||0))['names','im','pct','ts'].forEach(k=>{if(r[k])S[k]=r[k]})}
+const w=await fetch(u,{method:'PUT',body:JSON.stringify(S)});if(!w.ok){stat('Sin permiso: usa un correo autorizado');return}
+loc();stat('Sincronizado '+new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}));
+if(b!==JSON.stringify(S.ex)+S.ts+JSON.stringify(S.im)){fillW();if(tab!=='aju')R()}}catch(e){if(e==='login'){stat('Inicia sesión');if(!$('#le'))R()}else stat('Sin conexión (guardado local)')}}
+const $=s=>document.querySelector(s);
+const fm=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(n||0);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const today=new Date().toISOString().slice(0,10);
+let mon=today.slice(0,7),tab='res',flt='all',CH={};
+const exm=m=>S.ex.filter(e=>e.d.startsWith(m));
+const sum=a=>a.reduce((s,e)=>s+e.a,0);
+const byT=a=>{const r={p:0,h:0,n:0,o:0};a.forEach(e=>r[e.t]+=e.a);return r};
+const im=()=>S.im[mon]||[0,0];const inc=()=>im()[0]+im()[1];
+const dim=m=>new Date(+m.slice(0,4),+m.slice(5,7),0).getDate();
+const el=m=>m===today.slice(0,7)?+today.slice(8):dim(m);
+const prev=(m,k)=>{const d=new Date(+m.slice(0,4),+m.slice(5,7)-1-k,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')};
+const mlab=m=>new Date(+m.slice(0,4),+m.slice(5,7)-1,1).toLocaleDateString('es-CL',{month:'short',year:'2-digit'});
+const tabs=[['res','Resumen'],['mov','Movimientos'],['inf','Informes'],['his','Historial'],['aju','Ajustes']];
+function mk(id,cfg){if(CH[id])CH[id].destroy();const c=document.getElementById(id);if(!c)return;Chart.defaults.color=css('--mut');Chart.defaults.font.family='Manrope,system-ui,sans-serif';CH[id]=new Chart(c,Object.assign({options:{}},cfg));}
+const col=k=>css(T[k].c);
+function opts(x){return Object.assign({responsive:true,maintainAspectRatio:false},x)}
+function add(){const a=+$('#fa').value,d=$('#fd').value.trim(),c=$('#ft').value;if(!a||a<=0||!d){alert('Escribe un monto mayor a 0 y una descripción.');return}
+S.ex.push({id:Date.now()+Math.floor(Math.random()*1000),a,n:d,c,t:TY[c].g,w:+$('#fw').value,d:$('#fx').value||today});save();$('#fa').value='';$('#fd').value='';R();}
+function del(id){S.ex=S.ex.filter(e=>e.id!==id);(S.del=S.del||[]).push(id);save();R()}
+function insights(m){const a=exm(m),t=byT(a),I=inc(),out=[];
+if(!I)out.push(['','Configura los sueldos en Ajustes para ver presupuestos y alertas.']);
+else{['p','h','n','o'].forEach(k=>{const lim=I*S.pct[k]/100;if(t[k]>lim)out.push(['bad',`${T[k].n} superó su tope por ${fm(t[k]-lim)}.`]);else if(t[k]>lim*.8&&lim>0)out.push(['',`${T[k].n} ya usó el ${Math.round(t[k]/lim*100)}% de su tope.`])});
+const e=el(m),proj=sum(a)/Math.max(e,1)*dim(m),meta=I*(100-S.pct.a)/100;
+if(a.length)out.push([proj>meta?'bad':'ok',proj>meta?`Al ritmo actual cerrarán el mes gastando ${fm(proj)}, ${fm(proj-meta)} más de lo que permite su meta de ahorro.`:`Van bien: proyectan cerrar en ${fm(proj)}, dentro de su meta de ahorro.`])}
+if(t.h>0){out.push(['',`Hormiga este mes: ${fm(t.h)}. Si sigue así, son ${fm(t.h*12)} al año.`]);
+const g={};a.filter(e=>e.t==='h').forEach(e=>{const k=e.n.toLowerCase();g[k]=g[k]||{s:0,c:0,n:e.n};g[k].s+=e.a;g[k].c++});
+const top=Object.values(g).sort((x,y)=>y.s-x.s)[0];if(top)out.push(['',`Tu mayor hormiga: ${esc(top.n)} (${top.c} veces, ${fm(top.s)}).`])}
+return out}
+function vRes(){const a=exm(mon),t=byT(a),I=inc(),g=sum(a),disp=I-g;
+let h=`<div class="g k4"><div class="card"><div class="sub">Ingresos del mes</div><div class="big">${fm(I)}</div></div>
+<div class="card"><div class="sub">Gastado</div><div class="big">${fm(g)}</div></div>
+<div class="card"><div class="sub">Disponible</div><div class="big" style="color:${disp<0?'var(--n)':'var(--ok)'}">${fm(disp)}</div></div>
+<div class="card"><div class="sub">Ahorro (meta ${S.pct.a}%)</div><div class="big">${I?Math.round(Math.max(disp,0)/I*100):0}%</div></div></div>
+<div class="g k2" style="margin-top:12px"><div class="card"><h2>Presupuesto por tipo</h2>`;
+['p','h','n','o'].forEach(k=>{const lim=I*S.pct[k]/100,pc=lim?Math.min(t[k]/lim*100,100):0,over=t[k]>lim&&lim>0;
+h+=`<div style="margin-bottom:12px"><div class="row"><b>${T[k].n}</b><span class="sub">${fm(t[k])} de ${fm(lim)}</span></div><div class="bar"><i style="width:${pc}%;background:${over?'var(--n)':'var(--'+({p:'p',h:'h',n:'n',o:'o'})[k]+')'}"></i></div></div>`});
+h+=`</div><div class="card"><h2>Alertas y hallazgos</h2>${insights(mon).map(x=>`<div class="al ${x[0]}">${x[1]}</div>`).join('')||'<div class="emp">Registra gastos para ver hallazgos.</div>'}</div></div>
+<div class="g k2" style="margin-top:12px"><div class="card"><h2>¿En qué se va la plata?</h2><div class="cv"><canvas id="c1"></canvas></div></div>
+<div class="card"><h2>Gasto acumulado vs. ritmo ideal</h2><div class="cv"><canvas id="c2"></canvas></div></div></div>`;
+if(!S.ex.length)h+=`<div class="card emp" style="margin-top:12px">Aún no hay gastos. Regístralos arriba o <button onclick="demo()">carga datos de ejemplo</button> para ver cómo funciona.</div>`;
+$('#v').innerHTML=h;
+mk('c1',{type:'doughnut',data:{labels:Object.keys(TY).map(k=>TY[k].n),datasets:[{data:Object.keys(TY).map(k=>sum(a.filter(e=>(e.c||e.t)===k))),backgroundColor:Object.keys(TY).map(k=>TY[k].c),borderColor:css('--card'),borderWidth:3}]},options:opts({cutout:'62%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>' '+c.label+': '+fm(c.raw)}}}})});
+const D=dim(mon),e=el(mon),cum=[],ide=[];let s=0;const meta=I*(100-S.pct.a)/100;
+for(let d=1;d<=D;d++){s+=sum(a.filter(x=>+x.d.slice(8)===d));cum.push(d<=e?s:null);ide.push(meta*d/D)}
+mk('c2',{type:'line',data:{labels:[...Array(D).keys()].map(i=>i+1),datasets:[{label:'Real',data:cum,borderColor:css('--n'),backgroundColor:css('--n'),pointRadius:0,tension:.25,borderWidth:3},{label:'Ideal (según meta de ahorro)',data:ide,borderColor:css('--p'),borderDash:[6,5],pointRadius:0,borderWidth:2}]},options:opts({plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fm(c.raw)}}},scales:{y:{ticks:{callback:v=>fm(v)}},x:{title:{display:true,text:'Día del mes'}}}})})}
+function vMov(){const a=exm(mon).filter(e=>flt==='all'||(e.c||e.t)===flt).sort((x,y)=>y.d.localeCompare(x.d));
+$('#v').innerHTML=`<div class="card"><div class="row" style="margin-bottom:8px"><h2>Movimientos de ${mlab(mon)}</h2><select onchange="flt=this.value;R()"><option value="all">Todos</option>${Object.keys(TY).map(k=>`<option value="${k}" ${flt===k?'selected':''}>${TY[k].n}</option>`).join('')}</select></div>
+${a.length?`<div class="tw"><table><tr><th>Fecha</th><th>Descripción</th><th>Tipo</th><th>Quién</th><th class="r">Monto</th><th></th></tr>${a.map(e=>`<tr><td>${e.d.slice(8)}/${e.d.slice(5,7)}</td><td>${esc(e.n)}</td><td><span class="tag" style="background:${TY[e.c||e.t].c}">${TY[e.c||e.t].n}</span></td><td>${esc(S.names[e.w]||'Ambos')}</td><td class="r">${fm(e.a)}</td><td><button class="del" onclick="del(${e.id})" aria-label="Eliminar">✕</button></td></tr>`).join('')}</table></div><div class="row" style="margin-top:10px"><b>Total</b><b>${fm(sum(a))}</b></div>`:'<div class="emp">No hay movimientos con este filtro.</div>'}</div>`}
+function vInf(){const a=exm(mon),t=byT(a),I=inc(),g=sum(a);
+const ms=[5,4,3,2,1,0].map(k=>prev(mon,k));
+const pw=[0,1,2].map(w=>byT(a.filter(e=>e.w===w)));
+const hh={};a.filter(e=>e.t==='h').forEach(e=>{const k=e.n.toLowerCase();hh[k]=hh[k]||{n:e.n,s:0,c:0};hh[k].s+=e.a;hh[k].c++});
+const top=Object.values(hh).sort((x,y)=>y.s-x.s).slice(0,6);
+$('#v').innerHTML=`<div class="card"><div class="row"><h2>Informe de ${mlab(mon)}</h2><button class="np" onclick="window.print()">Imprimir / guardar PDF</button></div>
+<p>Ingresaron <b>${fm(I)}</b> y gastaron <b>${fm(g)}</b> (${I?Math.round(g/I*100):0}% del sueldo). ${I?`Quedaron <b>${fm(I-g)}</b> disponibles.`:''}
+Los gastos hormiga sumaron <b>${fm(t.h)}</b>${I?` (${(t.h/I*100).toFixed(1)}% del ingreso; tope ${S.pct.h}%)`:''}, equivalentes a <b>${fm(t.h*12)}</b> al año, y lo no necesario <b>${fm(t.n)}</b>.</p>
+${insights(mon).map(x=>`<div class="al ${x[0]}">${x[1]}</div>`).join('')}</div>
+<div class="g k2" style="margin-top:12px"><div class="card"><h2>Evolución de 6 meses</h2><div class="cv"><canvas id="c3"></canvas></div></div>
+<div class="card"><h2>Quién gasta en qué</h2><div class="cv"><canvas id="c4"></canvas></div></div>
+<div class="card"><h2>Ranking de gastos hormiga</h2><div class="cv"><canvas id="c5"></canvas></div>${top.length?'':'<div class="emp">Sin gastos hormiga este mes.</div>'}</div>
+<div class="card"><h2>Presupuesto vs. real</h2><div class="cv"><canvas id="c6"></canvas></div></div></div>`;
+const st=Object.keys(T).map(k=>({label:T[k].n,data:ms.map(m=>byT(exm(m))[k]),backgroundColor:col(k)}));
+const sc={x:{stacked:true},y:{stacked:true,ticks:{callback:v=>fm(v)}}},tt={callbacks:{label:c=>' '+c.dataset.label+': '+fm(c.raw)}};
+mk('c3',{type:'bar',data:{labels:ms.map(mlab),datasets:st},options:opts({scales:sc,plugins:{legend:{position:'bottom'},tooltip:tt}})});
+mk('c4',{type:'bar',data:{labels:[...S.names,'Ambos'],datasets:Object.keys(T).map(k=>({label:T[k].n,data:[pw[0][k],pw[1][k],pw[2][k]],backgroundColor:col(k)}))},options:opts({scales:sc,plugins:{legend:{position:'bottom'},tooltip:tt}})});
+mk('c5',{type:'bar',data:{labels:top.map(x=>x.n+' ('+x.c+'x)'),datasets:[{data:top.map(x=>x.s),backgroundColor:col('h')}]},options:opts({indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fm(c.raw)}}},scales:{x:{ticks:{callback:v=>fm(v)}}}})});
+mk('c6',{type:'bar',data:{labels:['Principal','Hormiga','No necesario','Otros'],datasets:[{label:'Presupuesto',data:['p','h','n','o'].map(k=>I*S.pct[k]/100),backgroundColor:css('--line')},{label:'Real',data:['p','h','n','o'].map(k=>t[k]),backgroundColor:['p','h','n','o'].map(col)}]},options:opts({plugins:{legend:{position:'bottom'},tooltip:tt},scales:{y:{ticks:{callback:v=>fm(v)}}}})})}
+function vAju(){const p=S.pct,tot=p.p+p.h+p.n+p.o+p.a;
+$('#v').innerHTML=`<div class="g k2"><div class="card"><h2>Personas e ingresos de ${mlab(mon)}</h2><div class="form" style="grid-template-columns:1fr 1fr">
+<label>Nombre 1<input id="n0" value="${esc(S.names[0])}"></label><label>Sueldo 1<input id="i0" type="number" value="${im()[0]}"></label>
+<label>Nombre 2<input id="n1" value="${esc(S.names[1])}"></label><label>Sueldo 2<input id="i1" type="number" value="${im()[1]}"></label></div></div>
+<div class="card"><h2>Reparto del sueldo (%)</h2><div class="form" style="grid-template-columns:repeat(3,1fr)">${[['p','Principal'],['h','Hormiga'],['n','No necesario'],['o','Otros'],['a','Ahorro']].map(x=>`<label>${x[1]}<input id="p_${x[0]}" type="number" value="${p[x[0]]}"></label>`).join('')}</div>
+<div class="sub" style="margin-top:8px;color:${tot===100?'var(--ok)':'var(--n)'}">Suman ${tot}% ${tot===100?'✓':'(deben sumar 100%)'}. Sugerencia: 50 / 8 / 12 / 10 / 20.</div></div></div>
+<div class="card" style="margin-top:12px"><h2>Historial y respaldo</h2><div class="form" style="grid-template-columns:1fr 1fr"><label>Conservar historial<select id="kp">${[[0,'Todos los meses'],[24,'Últimos 24 meses'],[12,'Últimos 12 meses'],[6,'Últimos 6 meses'],[2,'Últimos 2 meses']].map(x=>`<option value="${x[0]}" ${(S.keep||0)===x[0]?'selected':''}>${x[1]}</option>`).join('')}</select></label></div><div class="sub" style="margin-top:8px">Por defecto se guardan todos los meses. Último respaldo descargado: ${S.lb||'nunca'}.</div></div>
+<div class="card" style="margin-top:12px"><h2>Compartir entre los dos</h2><div class="form" style="grid-template-columns:2fr 1fr auto"><label>URL de Firebase Realtime Database<input id="cu" value="${esc(CFG.url)}" placeholder="https://tu-proyecto-default-rtdb.firebaseio.com"></label><label>API key de Firebase<input id="cc" value="${esc(CFG.code)}" placeholder="AIza…"></label><button onclick="cfg()">Conectar</button></div><div class="sub" style="margin-top:8px">Los dos entran con su propio correo y contraseña. Estado: ${CFG.url&&CFG.code?'conectado':'sin conectar'}. ${sess()?'<a href="#" onclick="logout();return false">Cerrar sesión</a>':''}</div></div>
+<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="pri" onclick="ajs()">Guardar ajustes</button><button onclick="demo()">Cargar datos de ejemplo</button><button onclick="csv()">Exportar CSV</button><button onclick="bk()">Descargar respaldo</button><button onclick="$('#rf').click()">Restaurar respaldo</button><input id="rf" type="file" accept=".json" hidden onchange="rs(this)"><button onclick="if(confirm('¿Borrar todos los gastos?')){S.del=(S.del||[]).concat(S.ex.map(e=>e.id));S.ex=[];save();R()}">Borrar gastos</button></div>
+<div class="sub" style="margin-top:10px">Los datos se guardan en este dispositivo y, si conectan Firebase, se comparten entre los dos en tiempo casi real.</div>`}
+function ajs(){S.names=[$('#n0').value||'Yo',$('#n1').value||'Esposa'];const kk=+$('#kp').value;if(kk&&kk!==S.keep&&!confirm('Se borrarán los datos anteriores a los últimos '+kk+' meses. Descarga un respaldo antes. ¿Continuar?'))return;S.keep=kk;purge();S.im[mon]=[+$('#i0').value||0,+$('#i1').value||0];S.ts=Date.now();['p','h','n','o','a'].forEach(k=>S.pct[k]=+$('#p_'+k).value||0);save();fillW();R()}
+function demo(){for(let m=0;m<6;m++){const k=prev(today.slice(0,7),m);if(!S.im[k])S.im[k]=[900000,750000]}S.ts=Date.now();const L={p:[['Arriendo',380000],['Supermercado',65000],['Luz y agua',48000],['Bencina',30000],['Farmacia',18000]],h:[['Café',2800],['Snack kiosco',1800],['Delivery',9500],['Suscripción app',4500],['Bebida',1500],['Uber',6000]],n:[['Ropa',35000],['Salida a comer',28000],['Videojuego',22000]],o:[['Regalo',15000],['Mascota',12000]]};let r=7;const rnd=()=>(r=(r*9301+49297)%233280)/233280;
+for(let m=0;m<6;m++){const mm=prev(today.slice(0,7),m),D=m?28:Math.max(el(mm),3);Object.keys(L).forEach(k=>{const n={p:5,h:26,n:4,o:2}[k];for(let i=0;i<n;i++){const x=L[k][Math.floor(rnd()*L[k].length)];S.ex.push({id:Date.now()+Math.random(),a:Math.round(x[1]*(.8+rnd()*.5)),n:x[0],t:k,c:k,w:Math.floor(rnd()*3),d:mm+'-'+String(1+Math.floor(rnd()*D)).padStart(2,'0')})}})}
+save();fillW();R()}
+function purge(){if(!S.keep)return;const c=prev(today.slice(0,7),S.keep-1);const old=S.ex.filter(e=>e.d.slice(0,7)<c);if(old.length){S.del=(S.del||[]).concat(old.map(e=>e.id));S.ex=S.ex.filter(e=>e.d.slice(0,7)>=c)}Object.keys(S.im).forEach(m=>{if(m<c)delete S.im[m]})}
+function mj(m){dl('plata-clara-'+m+'.json',JSON.stringify({mes:m,ingresos:S.im[m]||[0,0],nombres:S.names,gastos:exm(m)},null,1),'application/json')}
+function vHis(){const ms=[...new Set([...Object.keys(S.im),...S.ex.map(e=>e.d.slice(0,7))])].sort().reverse();
+const row=m=>{const a=exm(m),g=sum(a),i=S.im[m]||[0,0],I=i[0]+i[1];return '<tr><td><a href="#" onclick="mon=\''+m+'\';tab=\'res\';R();return false">'+mlab(m)+'</a></td><td class="r">'+fm(I)+'</td><td class="r">'+fm(g)+'</td><td class="r">'+fm(byT(a).h)+'</td><td class="r" style="color:'+(I-g<0?'var(--n)':'var(--ok)')+'">'+fm(I-g)+(I?' ('+Math.round((I-g)/I*100)+'%)':'')+'</td><td><button onclick="mj(\''+m+'\')">JSON</button></td></tr>'};
+$('#v').innerHTML=`<div class="card"><h2>Historial mensual</h2>${ms.length?'<div class="tw"><table><tr><th>Mes</th><th class="r">Ingresos</th><th class="r">Gastado</th><th class="r">Hormiga</th><th class="r">Ahorro</th><th></th></tr>'+ms.map(row).join('')+'</table></div>':'<div class="emp">Aún no hay meses guardados.</div>'}</div><div class="card" style="margin-top:12px"><h2>Ahorro y hormigas por mes</h2><div class="cv"><canvas id="c7"></canvas></div></div>`;
+const r=ms.slice().reverse().slice(-12);
+mk('c7',{type:'bar',data:{labels:r.map(mlab),datasets:[{label:'Ahorro',data:r.map(m=>{const i=S.im[m]||[0,0];return i[0]+i[1]-sum(exm(m))}),backgroundColor:css('--p')},{label:'Hormiga',data:r.map(m=>byT(exm(m)).h),backgroundColor:css('--h')}]},options:opts({plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fm(c.raw)}}},scales:{y:{ticks:{callback:v=>fm(v)}}}})})}
+function fillW(){const a=$('#fw').value,b=$('#ft').value;$('#fw').innerHTML=S.names.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join('')+'<option value="2">Ambos</option>';$('#ft').innerHTML=Object.keys(TY).map(k=>`<option value="${k}">${TY[k].n}</option>`).join('');if(a)$('#fw').value=a;if(b)$('#ft').value=b}
+function cfg(){CFG={url:$('#cu').value.trim(),code:$('#cc').value.trim()};try{localStorage.setItem(KC,JSON.stringify(CFG))}catch(e){}TK=null;R();sync()}
+function dl(n,t,m){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click()}
+function csv(){const r=[['Fecha','Descripción','Tipo','Grupo','Quién','Monto']].concat(S.ex.slice().sort((x,y)=>x.d.localeCompare(y.d)).map(e=>[e.d,e.n,TY[e.c||e.t].n,T[e.t].n,S.names[e.w]||'Ambos',e.a]));dl('gastos.csv','\ufeff'+r.map(x=>x.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n'),'text/csv')}
+function bk(){S.lb=today;loc();dl('respaldo-plata-clara.json',JSON.stringify(S),'application/json')}
+function rs(i){const f=i.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);if(!d.ex)throw 0;S=Object.assign(S,d);S.ts=Date.now();save();fillW();R()}catch(e){alert('Archivo no válido.')}})}
+function vSet(){const p=S.im[prev(mon,1)]||S.im[prev(mon,2)]||[0,0];
+$('#v').innerHTML=`<div class="card" style="max-width:520px;margin:20px auto"><h2>Empecemos ${mlab(mon)}</h2><p class="sub">Indica cuánto ingresa cada uno este mes. Solo se pregunta una vez al mes; después podrán registrar gastos.</p><div class="form" style="grid-template-columns:1fr 1fr"><label>Nombre 1<input id="s_n0" value="${esc(S.names[0])}"></label><label>Nombre 2<input id="s_n1" value="${esc(S.names[1])}"></label><label>Sueldo 1<input id="s0" type="number" min="0" value="${p[0]||''}" placeholder="900000"></label><label>Sueldo 2<input id="s1" type="number" min="0" value="${p[1]||''}" placeholder="750000"></label></div><div style="margin-top:12px"><button class="pri" onclick="setInc()">Guardar y empezar el mes</button></div><div class="sub" style="margin-top:10px">¿Ya usan la app en otro celular? Conecta Firebase en <a href="#" onclick="tab='aju';S.im[mon]=[0,0];R();return false">Ajustes</a>.</div></div>`}
+function setInc(){const a=+$('#s0').value||0,b=+$('#s1').value||0;if(a+b<=0){alert('Escribe al menos un sueldo.');return}S.names=[$('#s_n0').value||'Yo',$('#s_n1').value||'Esposa'];S.im[mon]=[a,b];S.ts=Date.now();save();fillW();tab='res';R()}
+function R(){$('#mon').value=mon;$('#nav').innerHTML=tabs.map(t=>`<button class="${tab===t[0]?'on':''}" onclick="tab='${t[0]}';R()">${t[1]}</button>`).join('');
+const lg=!!(CFG.url&&CFG.code&&!TK&&!sess());const ok=!!S.im[mon]&&!lg;$('#fc').style.display=ok?'':'none';$('#nav').style.display=ok?'':'none';(lg?vLogin:ok?{res:vRes,mov:vMov,inf:vInf,his:vHis,aju:vAju}[tab]:vSet)()}
+$('#fx').value=today;fillW();purge();R();sync();if(!LS)setTimeout(()=>alert('Este navegador o vista previa no permite guardar datos. Abre el link publicado en Chrome o Safari, sin modo privado.'),600);setInterval(sync,15000);let dp;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('#ib').style.display=''});if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
